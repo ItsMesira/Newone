@@ -51,13 +51,11 @@ export function HygieneReminders({ wakeTime, melatoninOnset, currentTime }: Hygi
     .slice(0, 3)
 
   return (
-    <Card className="h-full flex flex-col bg-zinc-900 border border-[rgba(255,255,255,0.05)]">
-      <CardHeader className="pb-4">
-        <div className="flex items-center gap-2">
-          <Bell className="w-5 h-5 text-zinc-400" />
-          <CardTitle className="text-lg">Up Next</CardTitle>
-        </div>
-      </CardHeader>
+    <Card className="h-full flex flex-col p-6">
+      <div className="flex justify-between items-start mb-6">
+        <h3 className="font-display font-bold text-zinc-200 tracking-widest text-lg uppercase">HYGIENE ALERTS</h3>
+        <span className="text-zinc-500 tracking-widest leading-none font-bold text-xl cursor-pointer">...</span>
+      </div>
       
       <div className="flex flex-col gap-3">
         <AnimatePresence>

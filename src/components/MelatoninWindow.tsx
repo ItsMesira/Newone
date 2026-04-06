@@ -29,28 +29,24 @@ export function MelatoninWindow({ window, currentTime }: MelatoninWindowProps) {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="h-full"
     >
-      <Card className="flex flex-col justify-center h-full relative overflow-hidden bg-gradient-to-br from-indigo-900/40 to-slate-900/60 border-indigo-500/20">
-        <div className="absolute top-0 right-0 -mr-8 -mt-8 opacity-20 pointer-events-none">
-          <Moon className="w-32 h-32 text-indigo-300" />
+      <Card className="flex flex-col p-6 h-full relative overflow-hidden">
+        <div className="absolute top-4 right-4 opacity-5 pointer-events-none">
+          <Moon className="w-24 h-24 text-white" />
         </div>
 
-        <div className="flex items-center gap-3 mb-2">
-          <motion.div
-            animate={isNear ? { opacity: [0.5, 1, 0.5] } : {}}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Moon className="w-5 h-5 text-indigo-400 fill-indigo-400" />
-          </motion.div>
-          <span className="text-indigo-200 font-medium">Melatonin Window</span>
+        <div className="flex justify-between items-start mb-6 z-10">
+          <h3 className="font-display font-bold text-zinc-200 tracking-widest text-lg uppercase">MELATONIN</h3>
+          <span className="text-zinc-500 tracking-widest leading-none font-bold text-xl cursor-pointer">...</span>
         </div>
 
-        <div className="mt-2 text-2xl font-semibold text-white tracking-tight">
-          {startStr} – {endStr}
+        <div className="mt-auto z-10">
+          <div className="text-3xl font-display font-bold text-primary tracking-wide">
+            {startStr}
+          </div>
+          <p className="text-xs text-zinc-400 mt-2 uppercase tracking-wider font-semibold">
+            Onset Window Begins
+          </p>
         </div>
-        
-        <p className="text-sm text-indigo-200/70 mt-2 z-10 w-3/4">
-          Your brain will naturally start producing melatonin. Ideal window to fall asleep.
-        </p>
       </Card>
     </motion.div>
   )

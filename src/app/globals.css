@@ -4,33 +4,33 @@
 
 @layer base {
   :root {
-    --background: #09090b;
+    --background: #0e0e0e; /* Extremely dark grey */
     --foreground: #fafafa;
-    --surface: rgba(24, 24, 27, 0.7); /* Zinc 900 with opacity for glassmorphism */
+    --surface: #1e1e1e; /* Dark flat grey, not translucent */
     
-    --primary: #8b5cf6; /* Violet 500 */
-    --primary-hover: #7c3aed; /* Violet 600 */
-    --primary-foreground: #ffffff;
+    --primary: #a3e635; /* Lime green from screenshot */
+    --primary-hover: #bef264;
+    --primary-foreground: #000000;
     
-    --success: #10b981; /* Emerald 500 */
-    --success-foreground: #ffffff;
+    --success: #a3e635;
+    --success-foreground: #000000;
     
-    --warning: #f59e0b; /* Amber 500 */
+    --warning: #f97316; /* Vibrant Orange */
     --warning-foreground: #ffffff;
     
-    --danger: #ef4444; /* Red 500 */
+    --danger: #ef4444;
     --danger-foreground: #ffffff;
 
-    --radius: 1rem;
+    --radius: 24px;
   }
 }
 
 @layer base {
   * {
-    @apply border-[rgba(255,255,255,0.1)]; /* Default subtle border for glassmorphism */
+    border-color: rgba(255, 255, 255, 0.05); /* very faint borders */
   }
   body {
-    @apply bg-app-background text-foreground min-h-screen antialiased;
+    @apply bg-background text-foreground min-h-screen antialiased bg-none;
   }
   /* Custom scrollbar for modern feel */
   ::-webkit-scrollbar {
@@ -49,6 +49,6 @@
 
 @layer utilities {
   .glass {
-    @apply bg-surface backdrop-blur-xl border border-[rgba(255,255,255,0.08)] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)];
+    @apply bg-surface border border-white/5;
   }
 }

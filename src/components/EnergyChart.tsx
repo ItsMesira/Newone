@@ -9,12 +9,11 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Filler,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { Card, CardHeader, CardTitle } from './ui/Card'
+import { Card } from './ui/Card'
 import { calculateEnergyCurve } from '@/lib/calculations'
-import { getHours, addHours, getMinutes } from 'date-fns'
+import { getHours, addHours } from 'date-fns'
 
 ChartJS.register(
   CategoryScale,
@@ -22,22 +21,19 @@ ChartJS.register(
   PointElement,
   LineElement,
   Title,
-  Tooltip,
-  Filler
+  Tooltip
 )
 
 interface EnergyChartProps {
   wakeTime: Date;
   sleepDebt: number;
-  currentTime: Date;
 }
 
-export function EnergyChart({ wakeTime, sleepDebt, currentTime }: EnergyChartProps) {
+export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
   const chartData = useMemo(() => {
     const labels = []
     const dataPoints = []
     
-    // We want to draw a full 24h curve starting from the wake time
     for (let i = 0; i <= 24; i++) {
       const timePoint = addHours(wakeTime, i)
       const currentHours = getHours(timePoint)
@@ -45,9 +41,6 @@ export function EnergyChart({ wakeTime, sleepDebt, currentTime }: EnergyChartPro
       const score = calculateEnergyCurve(timePoint, wakeTime, sleepDebt)
       dataPoints.push(score)
     }
-
-    // Insert current time point precisely 
-    // Usually we just draw the line and overlay the current time as a plugin or vertical line
     
     return {
       labels,
@@ -55,13 +48,16 @@ export function EnergyChart({ wakeTime, sleepDebt, currentTime }: EnergyChartPro
         {
           label: 'Energy Level',
           data: dataPoints,
-          borderColor: '#8b5cf6', // primary color
-          backgroundColor: 'rgba(139, 92, 246, 0.2)', // primary with opacity
-          tension: 0.4, // smooth cosine interpolation naturally enhanced by chart.js tension
-          fill: true,
-          pointRadius: 0, // hide points
-          pointHoverRadius: 4,
-          borderWidth: 3,
+          borderColor: '#a3e635', // Match --primary
+          backgroundColor: 'transparent',
+          tension: 0.4, 
+          fill: false,
+          pointRadius: 4,
+          pointBackgroundColor: '#f97316', // Orange dots for data points mimicking the masonry dot charts
+          pointBorderColor: '#1e1e1e',
+          pointBorderWidth: 2,
+          pointHoverRadius: 6,
+          borderWidth: 2,
         }
       ]
     }
@@ -82,11 +78,18 @@ export function EnergyChart({ wakeTime, sleepDebt, currentTime }: EnergyChartPro
       },
       x: {
         grid: {
-          display: false,
+          display: true,
+          color: 'rgba(255, 255, 255, 0.03)',
+          drawBorder: false,
         },
         ticks: {
-          color: 'rgba(255, 255, 255, 0.4)',
-          maxTicksLimit: 8,
+          color: '#71717a',
+          maxTicksLimit: 6,
+          font: {
+            family: 'sans-serif',
+            weight: 600,
+            size: 11
+          }
         },
         border: {
           display: false
@@ -100,13 +103,15 @@ export function EnergyChart({ wakeTime, sleepDebt, currentTime }: EnergyChartPro
       tooltip: {
         mode: 'index' as const,
         intersect: false,
-        backgroundColor: 'rgba(24, 24, 27, 0.9)',
+        backgroundColor: '#1e1e1e', // Dark surface
         titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: 'rgba(255,255,255,0.1)',
+        titleFont: { family: 'var(--font-display)', size: 14 },
+        bodyColor: '#a3e635',
+        borderColor: 'rgba(255,255,255,0.05)',
         borderWidth: 1,
-        padding: 10,
+        padding: 12,
         displayColors: false,
+        cornerRadius: 8,
       }
     },
     interaction: {
@@ -117,12 +122,18 @@ export function EnergyChart({ wakeTime, sleepDebt, currentTime }: EnergyChartPro
   }
 
   return (
-    <Card className="h-full flex flex-col pt-6 pb-2 px-2">
-      <CardHeader className="px-4 pb-0 mb-2">
-        <CardTitle>Daily Energy Curve</CardTitle>
-      </CardHeader>
-      <div className="flex-1 min-h-[200px] w-full mt-4">
+    <Card className="h-full flex flex-col p-6 min-h-[260px]">
+      <div className="flex justify-between items-start mb-6">
+        <h3 className="font-display font-bold text-zinc-200 tracking-widest text-lg uppercase">ENERGY CURVE</h3>
+        <span className="text-zinc-500 tracking-widest leading-none font-bold text-xl cursor-pointer">...</span>
+      </div>
+      <div className="flex-1 w-full min-h-[160px]">
         <Line data={chartData} options={options} />
+      </div>
+      
+      <div className="mt-4 flex gap-6 text-xs font-semibold text-zinc-400">
+        <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary"></span> Curve</div>
+        <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-warning"></span> Nodes</div>
       </div>
     </Card>
   )
