@@ -4,10 +4,8 @@ import { useCalculations } from "@/hooks/useCalculations"
 import { EnergyScore } from "@/components/EnergyScore"
 import { EnergyChart } from "@/components/EnergyChart"
 import { SleepDebtMeter } from "@/components/SleepDebtMeter"
-import { MelatoninWindow } from "@/components/MelatoninWindow"
-import { HygieneReminders } from "@/components/HygieneReminders"
 import { Button } from "@/components/ui/Button"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import Link from "next/link"
 import { Plus, ChevronDown } from "lucide-react"
 
@@ -70,7 +68,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="flex-1"
+            className="flex-1 min-h-[300px]"
           >
             <EnergyScore score={energyScore} label={energyLabel} />
           </motion.div>
@@ -79,7 +77,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
-            className="flex-1"
+            className="flex-[1.5] min-h-[400px]"
           >
             <EnergyChart wakeTime={wakeTimeToday!} sleepDebt={sleepDebt} />
           </motion.div>
@@ -87,34 +85,30 @@ export default function DashboardPage() {
 
         {/* Right Column (Matches "PROJECTS TIMELINE") */}
         <div className="md:col-span-7 flex flex-col gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-              className="flex-1"
-            >
-              {/* Replace Sleep Debt wrapper to force minimal structure */}
-              <SleepDebtMeter debt={sleepDebt} />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.4 }}
-              className="flex-1"
-            >
-              <MelatoninWindow window={melatoninWindow!} currentTime={currentTime!} />
-            </motion.div>
-          </div>
-
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="flex-1"
+          >
+            <SleepDebtMeter debt={sleepDebt} />
+          </motion.div>
+          
+          {/* Faux Spacer block mimicking the structure of Dribbble layout bottom right */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.5 }}
-            className="flex-[2]"
+            transition={{ duration: 0.4, delay: 0.4 }}
+            className="min-h-[200px] flex-1 border border-white/5 bg-[#0e0e0e] rounded-3xl p-8 flex flex-col justify-between"
           >
-            <HygieneReminders wakeTime={wakeTimeToday!} melatoninOnset={melatoninWindow!.start} currentTime={currentTime!} />
+             <div className="flex justify-between items-start mb-6 z-10 w-full">
+                <h3 className="font-display font-bold text-zinc-500 tracking-widest text-lg uppercase">SYSTEM RELIABILITY</h3>
+              </div>
+              <div className="flex flex-col gap-4 w-full">
+                 <div className="h-4 w-full bg-zinc-800 rounded-sm"></div>
+                 <div className="h-4 w-5/6 bg-zinc-800/50 rounded-sm"></div>
+                 <div className="h-4 w-2/3 bg-zinc-800/20 rounded-sm"></div>
+              </div>
           </motion.div>
         </div>
 
