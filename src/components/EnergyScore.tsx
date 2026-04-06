@@ -52,7 +52,7 @@ export function EnergyScore({ score, label }: EnergyScoreProps) {
         </div>
         <div>
           <div className={`mb-1 text-sm ${isGood ? 'text-warning' : 'text-primary'}`}>
-            {isGood ? '▼' : '▲'} /* inverse arrow purely for visual layout balance matching the image */
+            {isGood ? '▼' : '▲'} {/* inverse arrow purely for visual layout balance matching the image */}
           </div>
           <div className="text-5xl font-display font-bold tracking-wide text-white capitalize">
             {label}
