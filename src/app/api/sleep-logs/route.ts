@@ -36,10 +36,10 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json()
-  const { date, bedtime, wake_time, actual_sleep, sleep_debt_contribution, notes } = body
+  const { date, bedtime, wake_time, actual_sleep, sleep_debt_contribution, notes, is_nap } = body
 
   // upsert basically allows duplicate dates to be overwritten if they exist
-  // We use ON CONFLICT (user_id, date) by supplying it via an RPC or since table has UNIQUE it will fail standard insertion
+  // We use ON CONFLICT (user_id, date, is_nap) by supplying it via an RPC or since table has UNIQUE it will fail standard insertion
   // so we should use upsert
   const { data, error } = await supabase
     .from('sleep_logs')
@@ -50,8 +50,9 @@ export async function POST(req: Request) {
       wake_time,
       actual_sleep,
       sleep_debt_contribution,
-      notes
-    }, { onConflict: 'user_id,date' })
+      notes,
+      is_nap: is_nap || false
+    }, { onConflict: 'user_id,date,is_nap' })
     .select()
 
   if (error) {

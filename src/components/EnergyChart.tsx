@@ -74,37 +74,21 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
   }
 
   // Render Component Wrapper
-  const Wrapper = ({ children }: { children: React.ReactNode }) => {
-    if (isFullscreen) {
-      return (
-        <div className="fixed inset-0 z-[100] bg-black flex flex-col p-8 md:p-16">
-           <div className="absolute top-0 left-0 w-full h-[1px] bg-zinc-800"></div>
-           <button 
-             onClick={() => setIsFullscreen(false)}
-             className="absolute top-8 right-8 z-50 text-zinc-500 hover:text-white transition-colors"
-           >
-             <Shrink className="w-6 h-6" />
-           </button>
-           {children}
-        </div>
-      )
-    }
-    return (
-      <div className="flex flex-col h-full w-full min-h-[400px] relative">
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-zinc-800"></div>
-        <button 
-          onClick={() => setIsFullscreen(true)}
-          className="absolute top-4 right-0 z-50 text-zinc-500 hover:text-white transition-colors"
-        >
-          <Expand className="w-4 h-4" />
-        </button>
-        {children}
-      </div>
-    )
-  }
+  const containerClasses = isFullscreen 
+    ? "fixed inset-0 z-[100] bg-black flex flex-col p-8 md:p-16"
+    : "flex flex-col h-full w-full min-h-[400px] relative";
 
   return (
-    <Wrapper>
+    <div className={containerClasses}>
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-zinc-800"></div>
+      
+      <button 
+        onClick={() => setIsFullscreen(!isFullscreen)}
+        className={`absolute z-50 text-zinc-500 hover:text-white transition-colors ${isFullscreen ? 'top-8 right-8' : 'top-4 right-0'}`}
+      >
+        {isFullscreen ? <Shrink className="w-6 h-6" /> : <Expand className="w-4 h-4" />}
+      </button>
+
       <div className="flex justify-between items-start pt-4 mb-8">
         <h3 className="font-mono text-zinc-500 tracking-[0.2em] text-xs uppercase z-10 relative">SYS.ENERGY_CURVE [24H]</h3>
         <span className="font-mono text-xs text-zinc-500 tracking-widest leading-none z-10 relative mr-12">CIRCADIAN RHYTHM</span>
@@ -235,6 +219,6 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
           return null;
         })}
       </div>
-    </Wrapper>
+    </div>
   )
 }

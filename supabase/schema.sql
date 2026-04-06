@@ -35,7 +35,8 @@ CREATE TABLE sleep_logs (
   notes text,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
-  UNIQUE(user_id, date)
+  is_nap boolean DEFAULT false,
+  UNIQUE(user_id, date, is_nap)
 );
 
 -- 4. Enable Row Level Security (RLS)

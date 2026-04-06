@@ -26,6 +26,12 @@ export function LogNapModal({ onClose }: LogNapModalProps) {
     try {
       const today = new Date().toISOString().split('T')[0];
       
+      // Calculate actual sleep in hours
+      const bed = new Date(`${today}T${sleepTime}:00`);
+      const wake = new Date(`${today}T${wakeTime}:00`);
+      let diff = (wake.getTime() - bed.getTime()) / (1000 * 60 * 60);
+      if (diff < 0) diff += 24;
+      
       const res = await fetch('/api/sleep-logs', {
         method: 'POST',
         headers: {
@@ -33,9 +39,11 @@ export function LogNapModal({ onClose }: LogNapModalProps) {
         },
         body: JSON.stringify({
           date: today,
-          bedtime: `${today}T${sleepTime}:00`,
-          wake_time: `${today}T${wakeTime}:00`,
-          is_nap: true // Optional: depending on backend constraint, typically duration < 4h = nap.
+          bedtime: bed.toISOString(),
+          wake_time: wake.toISOString(),
+          actual_sleep: diff,
+          sleep_debt_contribution: 0, 
+          is_nap: true
         }),
       })
 
