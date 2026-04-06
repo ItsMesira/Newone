@@ -47,18 +47,21 @@ export function SleepDebtMeter({ debt }: SleepDebtMeterProps) {
         </div>
       </div>
 
-      {/* Brutalist Block Meter */}
-      <div className="flex gap-[2px] w-full h-8 mt-auto">
-        {Array.from({ length: maxBlocks }).map((_, i) => (
-          <motion.div
-            initial={{ scaleY: 0 }}
-            animate={{ scaleY: 1 }}
-            transition={{ duration: 0.1, delay: i * 0.05 }}
-            key={i}
-            className={`flex-1 ${i < blocksFill ? (isWarning ? 'bg-zinc-300' : 'bg-white') : 'bg-white/5'}`}
-            style={{ originY: 1 }}
-          />
-        ))}
+      {/* Clinical Unified Measurement Tape */}
+      <div className="relative w-full h-2 mt-auto bg-zinc-900 border-x border-zinc-500 overflow-hidden">
+        {/* Fill */}
+        <motion.div
+           initial={{ width: 0 }}
+           animate={{ width: `${(Math.min(debt, 10) / 10) * 100}%` }}
+           transition={{ duration: 1, ease: "easeOut" }}
+           className={`absolute top-0 left-0 h-full ${isWarning ? 'bg-zinc-400' : 'bg-white'}`}
+        />
+        {/* Tick Marks overlay */}
+        <div className="absolute inset-0 flex justify-between px-1">
+          {Array.from({ length: 11 }).map((_, i) => (
+             <div key={i} className="w-[1px] h-full bg-black/50"></div>
+          ))}
+        </div>
       </div>
     </div>
   )

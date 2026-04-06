@@ -15,8 +15,8 @@ const navItems = [
 export function Navbar() {
   const pathname = usePathname()
 
-  // Don't show navbar in auth or onboarding
-  if (pathname.startsWith('/auth') || pathname.startsWith('/onboarding') || pathname === '/') {
+  // Don't show navbar in auth, onboarding, or dashboard (has own nav)
+  if (pathname.startsWith('/auth') || pathname.startsWith('/onboarding') || pathname === '/' || pathname.startsWith('/dashboard')) {
     return null
   }
 

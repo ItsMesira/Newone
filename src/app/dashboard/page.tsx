@@ -49,14 +49,14 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex items-center gap-6">
-            <div className="hidden sm:flex items-center gap-4 text-xs font-mono text-zinc-500 tracking-widest uppercase">
-              <span className="hover:text-white cursor-pointer transition-colors">DATE: {new Date().toISOString().split('T')[0]}</span>
-              <span className="text-zinc-800">|</span>
-              <span className="hover:text-white cursor-pointer transition-colors">V: DAILY GRAPH</span>
+            <div className="hidden sm:flex items-center gap-6 text-xs font-mono text-zinc-500 tracking-widest uppercase">
+              <Link href="/dashboard" className="text-white">HOME</Link>
+              <Link href="/history" className="hover:text-white transition-colors">HISTORY</Link>
+              <Link href="/settings" className="hover:text-white transition-colors">SETTINGS</Link>
             </div>
             
             <Link href="/log">
-              <Button className="rounded-none px-6 py-4 bg-white text-black hover:bg-zinc-200 font-mono text-xs uppercase tracking-widest border-none transition-colors h-auto">
+              <Button className="rounded-none px-6 py-4 bg-white text-black hover:bg-zinc-200 font-mono text-xs uppercase tracking-widest border-none transition-colors h-auto flex items-center">
                 <Plus className="w-3 h-3 mr-2" />
                 INITIATE LOG
               </Button>
