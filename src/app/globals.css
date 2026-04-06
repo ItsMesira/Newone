@@ -2,26 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #09090b;
+    --foreground: #fafafa;
+    --surface: rgba(24, 24, 27, 0.7); /* Zinc 900 with opacity for glassmorphism */
+    
+    --primary: #8b5cf6; /* Violet 500 */
+    --primary-hover: #7c3aed; /* Violet 600 */
+    --primary-foreground: #ffffff;
+    
+    --success: #10b981; /* Emerald 500 */
+    --success-foreground: #ffffff;
+    
+    --warning: #f59e0b; /* Amber 500 */
+    --warning-foreground: #ffffff;
+    
+    --danger: #ef4444; /* Red 500 */
+    --danger-foreground: #ffffff;
+
+    --radius: 1rem;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-[rgba(255,255,255,0.1)]; /* Default subtle border for glassmorphism */
+  }
+  body {
+    @apply bg-app-background text-foreground min-h-screen antialiased;
+  }
+  /* Custom scrollbar for modern feel */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-800 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-700;
+  }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .glass {
+    @apply bg-surface backdrop-blur-xl border border-[rgba(255,255,255,0.08)] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)];
   }
 }
