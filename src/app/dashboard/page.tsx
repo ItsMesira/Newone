@@ -4,12 +4,16 @@ import { useCalculations } from "@/hooks/useCalculations"
 import { EnergyScore } from "@/components/EnergyScore"
 import { EnergyChart } from "@/components/EnergyChart"
 import { SleepDebtMeter } from "@/components/SleepDebtMeter"
+import { HygieneReminders } from "@/components/HygieneReminders"
 import { Button } from "@/components/ui/Button"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
-import { Plus, ChevronDown } from "lucide-react"
+import { Plus, ChevronDown, Clock } from "lucide-react"
+import { useState } from "react"
+import { LogNapModal } from "@/components/LogNapModal"
 
 export default function DashboardPage() {
+  const [isNapModalOpen, setIsNapModalOpen] = useState(false)
   const { 
     sleepDebt, 
     energyScore, 
@@ -55,12 +59,21 @@ export default function DashboardPage() {
               <Link href="/settings" className="hover:text-white transition-colors">SETTINGS</Link>
             </div>
             
-            <Link href="/log">
-              <Button className="rounded-none px-6 py-4 bg-white text-black hover:bg-zinc-200 font-mono text-xs uppercase tracking-widest border-none transition-colors h-auto flex items-center">
-                <Plus className="w-3 h-3 mr-2" />
-                INITIATE LOG
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => setIsNapModalOpen(true)}
+                className="rounded-none px-4 py-4 bg-transparent border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-900 font-mono text-xs uppercase tracking-widest transition-colors h-auto flex items-center"
+              >
+                <Clock className="w-3 h-3 mr-2" />
+                NAP
               </Button>
-            </Link>
+              <Link href="/log">
+                <Button className="rounded-none px-6 py-4 bg-white text-black hover:bg-zinc-200 font-mono text-xs uppercase tracking-widest border-none transition-colors h-auto flex items-center">
+                  <Plus className="w-3 h-3 mr-2" />
+                  INITIATE LOG
+                </Button>
+              </Link>
+            </div>
           </div>
         </motion.div>
 
@@ -84,8 +97,11 @@ export default function DashboardPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2, delay: 0.1 }}
-              className="p-8 lg:p-12 min-h-[450px] flex"
+              className="p-8 lg:p-12 min-h-[450px] flex group relative"
             >
+              <div className="absolute top-4 right-4 z-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                 {/* Full-screen expand placeholder handled internally inside EnergyChart if needed */}
+              </div>
               <EnergyChart wakeTime={wakeTimeToday!} sleepDebt={sleepDebt} />
             </motion.div>
           </div>
@@ -101,37 +117,25 @@ export default function DashboardPage() {
               <SleepDebtMeter debt={sleepDebt} />
             </motion.div>
             
-            {/* System Diagnostic Block */}
+            {/* System Diagnostic Block --> Now Hygiene Reminders */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2, delay: 0.3 }}
               className="p-8 lg:p-12 flex flex-col justify-between min-h-[300px]"
             >
-               <div className="flex justify-between items-start mb-6 w-full relative">
-                  <div className="absolute top-0 left-0 w-full h-[1px] bg-zinc-800"></div>
-                  <h3 className="font-mono text-zinc-500 tracking-[0.2em] text-xs uppercase pt-4">SYS.DIAGNOSTICS</h3>
-                </div>
-                
-                <div className="flex flex-col gap-6 w-full mt-auto mb-4">
-                   <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
-                     <span className="font-mono text-xs uppercase text-zinc-500">Biological Drift</span>
-                     <span className="font-mono text-xs text-white">0.45%</span>
-                   </div>
-                   <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
-                     <span className="font-mono text-xs uppercase text-zinc-500">Sync Offset</span>
-                     <span className="font-mono text-xs text-zinc-300">-12 MS</span>
-                   </div>
-                   <div className="flex items-center justify-between">
-                     <span className="font-mono text-xs uppercase text-zinc-500">Process State</span>
-                     <span className="font-mono text-xs text-sky-400">ACTIVE</span>
-                   </div>
-                </div>
+               <HygieneReminders wakeTime={wakeTimeToday!} melatoninOnset={melatoninWindow!.start} />
             </motion.div>
           </div>
 
         </div>
       </div>
+      
+      <AnimatePresence>
+        {isNapModalOpen && (
+          <LogNapModal onClose={() => setIsNapModalOpen(false)} />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

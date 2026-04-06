@@ -1,9 +1,10 @@
 "use client"
 
-import { useMemo, useEffect, useState } from 'react'
+import { useMemo, useEffect, useState, useRef } from 'react'
 import { calculateEnergyCurve } from '@/lib/calculations'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { addMinutes, format, isAfter, isBefore } from 'date-fns'
+import { Expand, Shrink } from 'lucide-react'
 
 interface EnergyChartProps {
   wakeTime: Date;
@@ -12,75 +13,127 @@ interface EnergyChartProps {
 
 export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
   const [mounted, setMounted] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   
+  // Interactive Hover State
+  const [hoverPct, setHoverPct] = useState<number | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
+
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  const { points, maxBase, minBase } = useMemo(() => {
+  // Close full screen on escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFullscreen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const { points } = useMemo(() => {
     const pts = []
-    let max = 0;
-    let min = 100;
-    // Generate 48 data points (every 30 mins for 24 hours)
-    for (let i = 0; i <= 48; i++) {
-      const time = addMinutes(wakeTime, i * 30)
+    // 96 points for much higher resolution during interactive hover (every 15 mins)
+    for (let i = 0; i <= 96; i++) {
+      const time = addMinutes(wakeTime, i * 15)
       const score = calculateEnergyCurve(time, wakeTime, sleepDebt)
-      const isNow = i > 0 && isBefore(addMinutes(wakeTime, (i-1) * 30), new Date()) && isAfter(addMinutes(wakeTime, i * 30), new Date())
+      const isNow = i > 0 && isBefore(addMinutes(wakeTime, (i-1) * 15), new Date()) && isAfter(addMinutes(wakeTime, i * 15), new Date())
       
       pts.push({
-        x: (i / 48) * 100, // percentage width
-        y: 100 - score,    // percentage height (inverted for SVG coordinates)
+        x: (i / 96) * 100, // percentage width
+        y: 100 - score,    // percentage height
         time,
         score,
         isNow
       })
-      if (score > max) max = score;
-      if (score < min) min = score;
     }
-    return { points: pts, maxBase: max, minBase: min };
+    return { points: pts };
   }, [wakeTime, sleepDebt])
 
   if (!mounted) return <div className="min-h-[400px] w-full bg-black border border-zinc-800"></div>
 
-  // Create SVG path strings
-  // Smooth curve using cubic bezier from point to point is ideal, 
-  // but with 48 points, linear L commands are indistinguishable from true curve
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
   const areaD = `${pathD} L 100 100 L 0 100 Z`
 
+  // Hover Interaction Math
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current) return
+    const rect = svgRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100))
+    setHoverPct(percentage)
+  }
+
+  // Find the exact data point closest to the mouse hover
+  let activePoint = null
+  if (hoverPct !== null) {
+    activePoint = points.reduce((prev, curr) => 
+      Math.abs(curr.x - hoverPct) < Math.abs(prev.x - hoverPct) ? curr : prev
+    )
+  }
+
+  // Render Component Wrapper
+  const Wrapper = ({ children }: { children: React.ReactNode }) => {
+    if (isFullscreen) {
+      return (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col p-8 md:p-16">
+           <div className="absolute top-0 left-0 w-full h-[1px] bg-zinc-800"></div>
+           <button 
+             onClick={() => setIsFullscreen(false)}
+             className="absolute top-8 right-8 z-50 text-zinc-500 hover:text-white transition-colors"
+           >
+             <Shrink className="w-6 h-6" />
+           </button>
+           {children}
+        </div>
+      )
+    }
+    return (
+      <div className="flex flex-col h-full w-full min-h-[400px] relative">
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-zinc-800"></div>
+        <button 
+          onClick={() => setIsFullscreen(true)}
+          className="absolute top-4 right-0 z-50 text-zinc-500 hover:text-white transition-colors"
+        >
+          <Expand className="w-4 h-4" />
+        </button>
+        {children}
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col h-full w-full min-h-[400px] relative">
-      <div className="absolute top-0 left-0 w-full h-[1px] bg-zinc-800"></div>
-      
+    <Wrapper>
       <div className="flex justify-between items-start pt-4 mb-8">
         <h3 className="font-mono text-zinc-500 tracking-[0.2em] text-xs uppercase z-10 relative">SYS.ENERGY_CURVE [24H]</h3>
-        <span className="font-mono text-xs text-zinc-500 tracking-widest leading-none z-10 relative">CIRCADIAN RHYTHM</span>
+        <span className="font-mono text-xs text-zinc-500 tracking-widest leading-none z-10 relative mr-12">CIRCADIAN RHYTHM</span>
       </div>
       
       {/* Rise-Style Smooth Energy Curve Graphic */}
       <div className="flex-1 w-full relative mt-4 group">
         
         {/* Timeline Axis Background Lines */}
-        <div className="absolute top-1/4 left-0 w-full h-[1px] border-t border-dashed border-zinc-800"></div>
-        <div className="absolute top-2/4 left-0 w-full h-[1px] border-t border-dashed border-zinc-800"></div>
-        <div className="absolute top-3/4 left-0 w-full h-[1px] border-t border-dashed border-zinc-800"></div>
-        <div className="absolute bottom-0 left-0 w-full h-[1px] border-b border-zinc-600"></div>
+        <div className="absolute top-1/4 left-0 w-full h-[1px] border-t border-dashed border-zinc-900 pointer-events-none"></div>
+        <div className="absolute top-2/4 left-0 w-full h-[1px] border-t border-dashed border-zinc-900 pointer-events-none"></div>
+        <div className="absolute top-3/4 left-0 w-full h-[1px] border-t border-dashed border-zinc-900 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-full h-[1px] border-b border-zinc-700 pointer-events-none"></div>
 
-        {/* SVG Container mapping 0-100 coordinate space to scale 100% width/height */}
+        {/* SVG Container */}
         <svg 
+          ref={svgRef}
           viewBox="0 0 100 100" 
           preserveAspectRatio="none" 
-          className="absolute inset-0 w-full h-full overflow-visible"
+          className="absolute inset-0 w-full h-full overflow-visible cursor-crosshair"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHoverPct(null)}
         >
           <defs>
             <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
-              {/* Top of the wave matches max score; using Sky-400 equivalent #38bdf8 */}
               <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4"/>
               <stop offset="70%" stopColor="#38bdf8" stopOpacity="0.05"/>
               <stop offset="100%" stopColor="#000000" stopOpacity="0.0"/>
             </linearGradient>
-            
-            {/* Glossy stroke gradient */}
             <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.3"/>
               <stop offset="50%" stopColor="#38bdf8" stopOpacity="1"/>
@@ -95,6 +148,7 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
             transition={{ duration: 1, delay: 0.2 }}
             d={areaD} 
             fill="url(#energyGradient)" 
+            className="pointer-events-none"
           />
           
           {/* Main smooth bright line on top */}
@@ -105,16 +159,41 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
             d={pathD} 
             fill="none" 
             stroke="url(#lineGradient)" 
-            strokeWidth="0.8" 
+            strokeWidth={isFullscreen ? "0.4" : "0.8"} 
             strokeLinecap="round"
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
+            className="pointer-events-none"
           />
         </svg>
 
-        {/* X-Axis Time Markers - Just show 4 distinct points to keep it clean */}
-        <div className="absolute -bottom-6 w-full flex justify-between px-1">
-          {[0, 16, 32, 48].map((i) => (
+        {/* Interactive Hover Tooltip */}
+        <AnimatePresence>
+          {activePoint && hoverPct !== null && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute top-0 bottom-0 z-30 w-[1px] bg-zinc-400 pointer-events-none"
+              style={{ left: `${activePoint.x}%` }}
+            >
+              <div 
+                className="absolute w-3 h-3 rounded-full border-2 border-white bg-sky-400 pointer-events-none -ml-1.5"
+                style={{ top: `${activePoint.y}%`, marginTop: '-6px' }}
+              ></div>
+              <div 
+                className={`absolute top-4 ${activePoint.x > 80 ? 'right-4' : 'left-4'} bg-white text-black p-3 pointer-events-none whitespace-nowrap min-w-[120px]`}
+              >
+                <div className="font-mono text-xs uppercase text-zinc-500 mb-1">{format(activePoint.time, 'HH:mm')}</div>
+                <div className="font-display text-3xl font-medium tracking-tighter leading-none">{Math.round(activePoint.score)}%</div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* X-Axis Time Markers */}
+        <div className="absolute -bottom-6 w-full flex justify-between px-1 pointer-events-none">
+          {[0, 24, 48, 72, 96].map((i) => (
              <span key={i} className="font-mono text-[10px] text-zinc-500 uppercase">
                {format(points[i].time, 'HH:mm')}
              </span>
@@ -122,18 +201,17 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
         </div>
 
         {/* Real-time Indicator Line (Now) */}
-        {points.map((p, i) => {
+        {!activePoint && points.map((p, i) => {
           if (p.isNow) {
              return (
                <motion.div 
                  key="now"
                  initial={{ opacity: 0 }}
                  animate={{ opacity: 1 }}
-                 className="absolute top-0 bottom-0 z-20 w-[1px] bg-red-500/80 pointer-events-none"
+                 className="absolute top-0 bottom-0 z-20 w-[1px] bg-sky-500/80 pointer-events-none"
                  style={{ left: `${p.x}%` }}
                >
-                 <div className="absolute top-0 -ml-1 w-2 h-2 rounded-full border border-red-500 bg-black"></div>
-                 <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-red-500/10 text-red-400 font-mono text-[9px] px-1 py-0.5 rounded border border-red-500/50">
+                 <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-sky-500/10 text-sky-400 font-mono text-[9px] px-1 py-0.5 rounded border border-sky-500/50">
                     NOW
                  </div>
                </motion.div>
@@ -142,6 +220,6 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
           return null;
         })}
       </div>
-    </div>
+    </Wrapper>
   )
 }

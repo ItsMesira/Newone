@@ -36,7 +36,15 @@ export function useCalculations() {
   // Create a Date object for today's default wake time
   const wakeTimeToday = parseTimeString(settings.default_wake_time || '07:00')
   
-  const energyScore = calculateEnergyCurve(currentTime, wakeTimeToday, sleepDebt)
+  // Identify naps today to ease homeostasis pressure. Treat any sleep < 3 hours logged today as a nap.
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const napsTodayLogs = parsedLogs.filter((l: any) => 
+    l.date.getTime() === todayStart.getTime() && l.actual_sleep <= 3.0 && l.actual_sleep > 0
+  )
+  const napsTotalHours = napsTodayLogs.reduce((sum: number, log: any) => sum + log.actual_sleep, 0)
+  
+  const energyScore = calculateEnergyCurve(currentTime, wakeTimeToday, sleepDebt, napsTotalHours)
   const energyLabel = getEnergyLabel(energyScore)
   
   const melatoninWindow = getMelatoninWindow(wakeTimeToday)

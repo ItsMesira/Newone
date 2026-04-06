@@ -40,9 +40,8 @@ export function calculateSleepDebt(
     // Formula in prompt: weight = 1 - (daysAgo / 14).
     const weight = 1 - i / 14
     
-    // If no log exists for the day, assume missing sleep (actualSleep = 0) or average?
-    // Let's assume actualSleep = 0 to encourage regular logging. Or we can just use 0 sleep.
-    const actualSleep = log ? log.actual_sleep : 0
+    // Default to the user's base sleep need if they forgot to log to avoid inflating debt artificially
+    const actualSleep = log ? log.actual_sleep : sleepNeed
     
     // Sleep debt per night contribution
     const debtContribution = sleepNeed - actualSleep
@@ -62,7 +61,8 @@ export function calculateSleepDebt(
 export function calculateEnergyCurve(
   currentTime: Date,
   wakeTime: Date,
-  sleepDebt: number
+  sleepDebt: number,
+  napsTotalHours: number = 0
 ): number {
   const currentHours = getHours(currentTime) + getMinutes(currentTime) / 60
   const wakeHours = getHours(wakeTime) + getMinutes(wakeTime) / 60
@@ -94,7 +94,13 @@ export function calculateEnergyCurve(
   const S_0 = Math.min(0.8, (sleepDebt / 8) * 0.3);
   
   // Exponential accumulation during wakefulness
-  const processS = 1 - (1 - S_0) * Math.exp(-t / tau_i);
+  let processS = 1 - (1 - S_0) * Math.exp(-t / tau_i);
+  
+  // Nap relief: Adenosine clears during sleep. Every hour of nap clears roughly 10% pressure
+  if (napsTotalHours > 0) {
+     const napClearance = Math.min(0.5, napsTotalHours * 0.15)
+     processS = Math.max(0, processS - napClearance)
+  }
 
   // SYNTHESIS: The precise integration
   // Alertness A = C - S. We scale this to a 0-100 representation.
