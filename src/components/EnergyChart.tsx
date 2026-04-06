@@ -119,7 +119,7 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
         <div className="absolute top-3/4 left-0 w-full h-[1px] border-t border-dashed border-zinc-900 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-full h-[1px] border-b border-zinc-700 pointer-events-none"></div>
 
-        {/* SVG Container */}
+        {/* SVG Container mapping 0-100 coordinate space to scale 100% width/height */}
         <svg 
           ref={svgRef}
           viewBox="0 0 100 100" 
@@ -129,17 +129,32 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
           onMouseLeave={() => setHoverPct(null)}
         >
           <defs>
-            <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4"/>
-              <stop offset="70%" stopColor="#38bdf8" stopOpacity="0.05"/>
-              <stop offset="100%" stopColor="#000000" stopOpacity="0.0"/>
+            {/* Wavy Pattern Texture for Low Energy States */}
+            <pattern id="wavy" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+              <path d="M 0,5 Q 2.5,0 5,5 T 10,5" fill="none" stroke="#27272a" strokeWidth="0.5" />
+              <path d="M 0,10 Q 2.5,5 5,10 T 10,10" fill="none" stroke="#27272a" strokeWidth="0.5" />
+            </pattern>
+
+            {/* Vertical Gradient mapping to energy height */}
+            <linearGradient id="energyGradient" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor="#4c1d95" stopOpacity="0.0"/>
+              <stop offset="40%" stopColor="#c026d3" stopOpacity="0.05"/>
+              <stop offset="80%" stopColor="#e11d48" stopOpacity="0.1"/>
+              <stop offset="100%" stopColor="#ea580c" stopOpacity="0.2"/>
             </linearGradient>
-            <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.3"/>
-              <stop offset="50%" stopColor="#38bdf8" stopOpacity="1"/>
-              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.3"/>
+            
+            {/* The Vibrant Rise-style Stroke */}
+            <linearGradient id="lineGradient" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="10%" stopColor="#4338ca"/> {/* Indigo */}
+              <stop offset="35%" stopColor="#7e22ce"/> {/* Purple */}
+              <stop offset="65%" stopColor="#db2777"/> {/* Pink */}
+              <stop offset="85%" stopColor="#f43f5e"/> {/* Rose */}
+              <stop offset="100%" stopColor="#f97316"/> {/* Orange Peak */}
             </linearGradient>
           </defs>
+
+          {/* Background Texture for low energy bottom half (score under 50%) */}
+          <rect x="0" y="50" width="100" height="50" fill="url(#wavy)" className="opacity-30" />
 
           {/* Fill shape underneath */}
           <motion.path 
@@ -159,33 +174,34 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
             d={pathD} 
             fill="none" 
             stroke="url(#lineGradient)" 
-            strokeWidth={isFullscreen ? "0.4" : "0.8"} 
+            strokeWidth={isFullscreen ? "0.6" : "1.2"} 
             strokeLinecap="round"
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
-            className="pointer-events-none"
+            className="pointer-events-none drop-shadow-md"
           />
         </svg>
 
         {/* Interactive Hover Tooltip */}
         <AnimatePresence>
-          {activePoint && hoverPct !== null && (
+          {hoverPct !== null && activePoint && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               className="absolute top-0 bottom-0 z-30 w-[1px] bg-zinc-400 pointer-events-none"
               style={{ left: `${activePoint.x}%` }}
             >
               <div 
-                className="absolute w-3 h-3 rounded-full border-2 border-white bg-sky-400 pointer-events-none -ml-1.5"
-                style={{ top: `${activePoint.y}%`, marginTop: '-6px' }}
+                className="absolute w-4 h-4 rounded-full border-[3px] border-black bg-rose-400 pointer-events-none -ml-2 transition-all duration-75"
+                style={{ top: `${activePoint.y}%`, marginTop: '-8px' }}
               ></div>
               <div 
-                className={`absolute top-4 ${activePoint.x > 80 ? 'right-4' : 'left-4'} bg-white text-black p-3 pointer-events-none whitespace-nowrap min-w-[120px]`}
+                className={`absolute top-4 ${activePoint.x > 80 ? 'right-4' : 'left-4'} bg-white text-black p-4 pointer-events-none min-w-[140px] shadow-2xl rounded-sm`}
               >
-                <div className="font-mono text-xs uppercase text-zinc-500 mb-1">{format(activePoint.time, 'HH:mm')}</div>
-                <div className="font-display text-3xl font-medium tracking-tighter leading-none">{Math.round(activePoint.score)}%</div>
+                <div className="font-mono text-[10px] uppercase text-zinc-500 mb-1 tracking-widest">{format(activePoint.time, 'HH:mm')}</div>
+                <div className="font-sans text-4xl font-light tracking-tighter leading-none">{Math.round(activePoint.score)}<span className="text-xl text-zinc-400">%</span></div>
               </div>
             </motion.div>
           )}
@@ -200,21 +216,20 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
           ))}
         </div>
 
-        {/* Real-time Indicator Line (Now) */}
-        {!activePoint && points.map((p, i) => {
+        {/* Real-time Indicator Line (Now) - ALWAYS RENDERED to prevent flashing layout shift */}
+        {points.map((p, i) => {
           if (p.isNow) {
              return (
-               <motion.div 
+               <div 
                  key="now"
-                 initial={{ opacity: 0 }}
-                 animate={{ opacity: 1 }}
-                 className="absolute top-0 bottom-0 z-20 w-[1px] bg-sky-500/80 pointer-events-none"
+                 className={`absolute top-0 bottom-0 z-20 w-[1px] bg-indigo-500/80 pointer-events-none transition-opacity duration-300 ${hoverPct !== null ? 'opacity-20' : 'opacity-100'}`}
                  style={{ left: `${p.x}%` }}
                >
-                 <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-sky-500/10 text-sky-400 font-mono text-[9px] px-1 py-0.5 rounded border border-sky-500/50">
+                 <div className="absolute top-0 -ml-1 w-2 h-2 rounded-full border border-indigo-500 bg-black"></div>
+                 <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-indigo-500/10 text-indigo-400 font-mono text-[9px] px-2 py-0.5 rounded-sm border border-indigo-500/30 tracking-widest">
                     NOW
                  </div>
-               </motion.div>
+               </div>
              )
           }
           return null;
