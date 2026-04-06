@@ -22,96 +22,115 @@ export default function DashboardPage() {
 
   if (isLoading || !wakeTimeToday || !melatoninWindow) {
     return (
-      <div className="flex items-center justify-center min-h-[80vh]">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center min-h-[80vh] bg-black">
+        <div className="w-12 h-12 border border-zinc-800 flex items-center justify-center">
+          <div className="w-2 h-2 bg-white animate-pulse"></div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 py-8 overflow-x-hidden min-h-screen">
-      {/* Top Banner mapping to the "CHECK BOX" Dribbble section */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 mt-4"
-      >
-        <div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-wider text-white">Sleep Sync</h1>
-        </div>
+    <div className="w-full bg-black min-h-screen text-white font-sans antialiased pb-20">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 border-x border-zinc-900 min-h-screen">
         
-        <div className="flex items-center gap-3">
-          {/* Faux Dribbble Style Pill Dropdowns */}
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="px-4 py-2 rounded-full bg-surface border border-white/5 text-sm text-zinc-300 font-medium flex items-center gap-2 cursor-pointer hover:bg-white/5 transition">
-              Date: Now <ChevronDown className="w-3 h-3 text-zinc-500" />
-            </div>
-            <div className="px-4 py-2 rounded-full bg-surface border border-white/5 text-sm text-zinc-300 font-medium flex items-center gap-2 cursor-pointer hover:bg-white/5 transition">
-              View: Daily <ChevronDown className="w-3 h-3 text-zinc-500" />
+        {/* Top Header Row / Navigation Area */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.1 }}
+          className="flex flex-col md:flex-row md:items-end justify-between py-6 border-b border-zinc-800 mb-12 gap-6"
+        >
+          <div>
+            <h1 className="text-3xl font-mono uppercase tracking-[0.2em] font-light text-white">SYNC.SLEEP_SYSTEM</h1>
+            <div className="text-zinc-500 font-mono text-xs mt-2 uppercase tracking-widest">
+              [Authorized Access] • Ver. 2.1.4
             </div>
           </div>
           
-          <Link href="/log">
-            <Button className="flex items-center gap-2 rounded-full px-6 bg-surface text-white border border-white/5 hover:bg-white/10 shadow-none">
-              <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Log Sleep</span>
-            </Button>
-          </Link>
-        </div>
-      </motion.div>
+          <div className="flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-4 text-xs font-mono text-zinc-500 tracking-widest uppercase">
+              <span className="hover:text-white cursor-pointer transition-colors">DATE: {new Date().toISOString().split('T')[0]}</span>
+              <span className="text-zinc-800">|</span>
+              <span className="hover:text-white cursor-pointer transition-colors">V: DAILY GRAPH</span>
+            </div>
+            
+            <Link href="/log">
+              <Button className="rounded-none px-6 py-4 bg-white text-black hover:bg-zinc-200 font-mono text-xs uppercase tracking-widest border-none transition-colors h-auto">
+                <Plus className="w-3 h-3 mr-2" />
+                INITIATE LOG
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        
-        {/* Main Left Column (Matches "CUSTOMER" / "PRODUCT") */}
-        <div className="md:col-span-5 flex flex-col gap-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="flex-1 min-h-[300px]"
-          >
-            <EnergyScore score={energyScore} label={energyLabel} />
-          </motion.div>
+        {/* Global Grid Container */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 border border-zinc-800 mb-12 relative">
           
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="flex-[1.5] min-h-[400px]"
-          >
-            <EnergyChart wakeTime={wakeTimeToday!} sleepDebt={sleepDebt} />
-          </motion.div>
-        </div>
-
-        {/* Right Column (Matches "PROJECTS TIMELINE") */}
-        <div className="md:col-span-7 flex flex-col gap-6">
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="flex-1"
-          >
-            <SleepDebtMeter debt={sleepDebt} />
-          </motion.div>
+          <div className="lg:col-span-12 absolute top-1/2 left-0 w-full h-[1px] bg-zinc-900 -z-10 hidden lg:block"></div>
           
-          {/* Faux Spacer block mimicking the structure of Dribbble layout bottom right */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-            className="min-h-[200px] flex-1 border border-white/5 bg-[#0e0e0e] rounded-3xl p-8 flex flex-col justify-between"
-          >
-             <div className="flex justify-between items-start mb-6 z-10 w-full">
-                <h3 className="font-display font-bold text-zinc-500 tracking-widest text-lg uppercase">SYSTEM RELIABILITY</h3>
-              </div>
-              <div className="flex flex-col gap-4 w-full">
-                 <div className="h-4 w-full bg-zinc-800 rounded-sm"></div>
-                 <div className="h-4 w-5/6 bg-zinc-800/50 rounded-sm"></div>
-                 <div className="h-4 w-2/3 bg-zinc-800/20 rounded-sm"></div>
-              </div>
-          </motion.div>
-        </div>
+          {/* Main Left Column: Energy Score & Chart */}
+          <div className="lg:col-span-7 flex flex-col border-b lg:border-b-0 lg:border-r border-zinc-800">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="p-8 lg:p-12 min-h-[350px] flex border-b border-zinc-800"
+            >
+              <EnergyScore score={energyScore} label={energyLabel} />
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2, delay: 0.1 }}
+              className="p-8 lg:p-12 min-h-[450px] flex"
+            >
+              <EnergyChart wakeTime={wakeTimeToday!} sleepDebt={sleepDebt} />
+            </motion.div>
+          </div>
 
+          {/* Right Column: Sleep Debt & System Diagnostics */}
+          <div className="lg:col-span-5 flex flex-col">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2, delay: 0.2 }}
+              className="p-8 lg:p-12 flex-1 border-b border-zinc-800 min-h-[400px] flex"
+            >
+              <SleepDebtMeter debt={sleepDebt} />
+            </motion.div>
+            
+            {/* System Diagnostic Block */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2, delay: 0.3 }}
+              className="p-8 lg:p-12 flex flex-col justify-between min-h-[300px]"
+            >
+               <div className="flex justify-between items-start mb-6 w-full relative">
+                  <div className="absolute top-0 left-0 w-full h-[1px] bg-zinc-800"></div>
+                  <h3 className="font-mono text-zinc-500 tracking-[0.2em] text-xs uppercase pt-4">SYS.DIAGNOSTICS</h3>
+                </div>
+                
+                <div className="flex flex-col gap-6 w-full mt-auto mb-4">
+                   <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+                     <span className="font-mono text-xs uppercase text-zinc-500">Biological Drift</span>
+                     <span className="font-mono text-xs text-white">0.45%</span>
+                   </div>
+                   <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+                     <span className="font-mono text-xs uppercase text-zinc-500">Sync Offset</span>
+                     <span className="font-mono text-xs text-zinc-300">-12 MS</span>
+                   </div>
+                   <div className="flex items-center justify-between">
+                     <span className="font-mono text-xs uppercase text-zinc-500">Process State</span>
+                     <span className="font-mono text-xs text-sky-400">ACTIVE</span>
+                   </div>
+                </div>
+            </motion.div>
+          </div>
+
+        </div>
       </div>
     </div>
   )

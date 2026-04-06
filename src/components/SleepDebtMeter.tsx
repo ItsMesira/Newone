@@ -1,81 +1,65 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Card, CardTitle } from "./ui/Card"
-import { Activity } from "lucide-react"
 
 interface SleepDebtMeterProps {
   debt: number; // in hours
 }
 
 export function SleepDebtMeter({ debt }: SleepDebtMeterProps) {
-  // Cap visual debt at 10 hours for the meter
-  const percentage = Math.min((debt / 10) * 100, 100)
-  
-  const getColor = (d: number) => {
-    if (d <= 1) return { text: "text-success", bg: "bg-success" }
-    if (d <= 3) return { text: "text-warning", bg: "bg-warning" }
-    return { text: "text-danger", bg: "bg-danger" }
-  }
+  // Cap visual modules at 10 hours max
+  const maxBlocks = 10;
+  const blocksFill = Math.min(Math.ceil(debt), maxBlocks);
 
-  const colors = getColor(debt)
+  const isWarning = debt > 3;
 
   return (
-    <Card className="flex flex-col p-8 h-full justify-between">
-      <div className="flex justify-between items-start mb-10 border-b border-white/5 pb-4">
-        <h3 className="font-display font-bold text-zinc-200 tracking-widest text-2xl uppercase">CHRONIC LOG (DEBT)</h3>
-        <span className="text-zinc-500 tracking-widest leading-none font-bold text-xl cursor-pointer">...</span>
+    <div className="flex flex-col h-full justify-between w-full relative">
+      {/* Structural alignment grid lines */}
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-zinc-800"></div>
+      
+      <div className="flex justify-between items-start pt-4 mb-4">
+        <h3 className="font-mono text-zinc-500 tracking-[0.2em] text-xs uppercase">SYS.CHRONIC_DEBT [HR]</h3>
+        <span className="font-mono text-xs text-zinc-500 tracking-widest">{isWarning ? 'CRITICAL' : 'NOMINAL'}</span>
       </div>
       
-      <div className="flex items-center gap-12 mt-2 mb-10 w-full flex-wrap">
-        <div>
-          <span className={`text-[80px] leading-none font-display tracking-tight font-bold ${colors.text}`}>
-            {debt.toFixed(1)}<span className="text-4xl text-zinc-500 font-normal ml-2 tracking-wide uppercase">h</span>
+      <div className="flex flex-col md:flex-row items-end justify-between gap-8 mt-2 mb-10 w-full">
+        {/* Raw Delta Figure */}
+        <div className="flex items-baseline leading-none">
+          <span className={`text-[80px] sm:text-[100px] font-display font-medium tracking-tighter ${isWarning ? 'text-zinc-300' : 'text-white'}`}>
+            {debt.toFixed(1)}
           </span>
-          <p className="text-sm text-zinc-400 mt-4 uppercase tracking-widest font-semibold">
-            {debt <= 1 ? "Fully Rested · Core Normalized" : "Accumulated Debt · Critical Threshold"}
-          </p>
+          <span className="text-2xl sm:text-4xl text-zinc-600 font-mono ml-2 uppercase">Δ</span>
         </div>
         
-        <div className="flex-1 min-w-[200px]">
-          <div className="grid grid-cols-2 gap-4 h-full">
-            <div className="border-l-2 border-white/10 pl-6 flex justify-center flex-col">
-              <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold mb-1">Metabolic Rate</span>
-              <span className="font-display text-white text-2xl font-bold tracking-wider">{debt <= 3 ? "STABLE" : "COMPROMISED"}</span>
+        {/* Metadata stats */}
+        <div className="flex flex-col pb-2 w-full md:w-auto md:min-w-[150px]">
+          <div className="flex flex-col gap-4 border-l border-zinc-800 pl-4 py-2">
+            <div className="flex flex-col">
+              <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Metabolic State</span>
+              <span className="font-mono text-white text-sm uppercase tracking-wider">{isWarning ? 'COMPROMISED' : 'STABLE'}</span>
             </div>
-            <div className="border-l-2 border-white/10 pl-6 flex justify-center flex-col">
-              <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold mb-1">Recovery Delta</span>
-              <span className="font-display text-white text-2xl font-bold tracking-wider">{Math.ceil(debt)} CYCLES</span>
+            <div className="flex flex-col">
+              <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Recovery Delta</span>
+              <span className="font-mono text-white text-sm uppercase tracking-wider">{Math.ceil(debt)} CYCLES</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="relative h-2 w-full bg-zinc-800 rounded-full overflow-hidden mt-auto">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          className={`absolute top-0 left-0 h-full rounded-full ${colors.bg}`}
-          onAnimationComplete={() => {
-            // Shake if debt is critical
-            if (debt >= 3) {
-              const el = document.getElementById("debt-meter-bar")
-              if (el) {
-                el.animate([
-                  { transform: 'translateX(0)' },
-                  { transform: 'translateX(-5px)' },
-                  { transform: 'translateX(5px)' },
-                  { transform: 'translateX(-5px)' },
-                  { transform: 'translateX(5px)' },
-                  { transform: 'translateX(0)' }
-                ], { duration: 400 })
-              }
-            }
-          }}
-        />
-        <div id="debt-meter-bar" className="absolute top-0 left-0 w-full h-full pointer-events-none" />
+      {/* Brutalist Block Meter */}
+      <div className="flex gap-[2px] w-full h-8 mt-auto">
+        {Array.from({ length: maxBlocks }).map((_, i) => (
+          <motion.div
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: 1 }}
+            transition={{ duration: 0.1, delay: i * 0.05 }}
+            key={i}
+            className={`flex-1 ${i < blocksFill ? (isWarning ? 'bg-zinc-300' : 'bg-white') : 'bg-white/5'}`}
+            style={{ originY: 1 }}
+          />
+        ))}
       </div>
-    </Card>
+    </div>
   )
 }

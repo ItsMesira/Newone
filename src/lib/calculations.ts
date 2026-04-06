@@ -56,9 +56,8 @@ export function calculateSleepDebt(
 
 /**
  * Calculate energy curve score 0-100 based on the Biological Two-Process Model of Sleep Regulation.
- * Process C (Circadian Rhythm): Continuous bimodal sine wave representing wake drive.
- * Process S (Homeostatic Sleep Pressure): Mounting non-linear pressure limiting capacity.
- * Chronic Debt: Systemic ceiling multiplier against Process S.
+ * Process C (Circadian Rhythm): Continuous bimodal sine wave approximation of Human Core Body Temperature.
+ * Process S (Homeostatic Sleep Pressure): Mounting non-linear pressure (Adenosine accumulation).
  */
 export function calculateEnergyCurve(
   currentTime: Date,
@@ -69,28 +68,43 @@ export function calculateEnergyCurve(
   const wakeHours = getHours(wakeTime) + getMinutes(wakeTime) / 60
   
   let t = currentHours - wakeHours
-  if (t < 0) t += 24
+  if (t < 0) t += 24 // hours since waking
 
-  // PROCESS C: True Biological Circadian Phase
-  // Fitted to human Core Body Temperature (CBT) rhythms. Peak ~4.5h post-wake, dip ~7.5h.
-  // Equation uses primary and harmonic 12h waves mapped exactly.
-  const phase1 = (t - 4.5) * (Math.PI / 12)
-  const phase2 = (t - 4.5) * (Math.PI / 6)
-  const processC = 0.6 * Math.sin(phase1 + Math.PI/2) + 0.2 * Math.sin(phase2 + Math.PI/2) + 0.5
+  // PROCESS C: Biological Circadian Phase (Core Body Temperature 5-Harmonic Fourier Model)
+  // Base phase offset assuming wake is ~7AM and minimum temperature is ~4:30AM.
+  // We model C(t) standardized between 0 and 1.
+  const phase = (t - 4.5) * (Math.PI / 12);
+  const processC = 
+    0.97 * Math.sin(phase + Math.PI/2) + 
+    0.22 * Math.sin(2 * phase + Math.PI/2) +
+    0.11 * Math.sin(3 * phase + Math.PI/2) +
+    0.05 * Math.sin(4 * phase + Math.PI/2) +
+    0.02 * Math.sin(5 * phase + Math.PI/2);
+  
+  // Normalize C to [0, 1] bounds approximately
+  const normalizedC = Math.max(0, Math.min(1, (processC + 1.2) / 2.4));
 
   // PROCESS S: Asymptotic Adenosine Accumulation (Homeostatic Pressure)
-  // Time constant (tau_S) for waking buildup in healthy adults is ~18.2 hours.
-  const tau_s = 18.2
-  const initialSaturation = Math.min(sleepDebt / 15, 0.8) // High debt means receptors are already 80% saturated at wake
+  // S(t) = 1 - (1 - S_0) * exp(-t / tau_i)
+  // tau_i = 18.2h for wake accumulation.
+  const tau_i = 18.2;
   
-  const buildup = 1.0 - Math.exp(-t / tau_s)
-  const processS = initialSaturation + buildup
+  // Baseline initial saturation due to un-recovered sleep debt (Chronic limit)
+  // A debt of 8 hours loosely equals a 30% baseline saturation.
+  const S_0 = Math.min(0.8, (sleepDebt / 8) * 0.3);
+  
+  // Exponential accumulation during wakefulness
+  const processS = 1 - (1 - S_0) * Math.exp(-t / tau_i);
 
-  // SYNTHESIS: The exact calculation
-  // Process C provides operational capacity ceiling, Process S actively subtracts from it.
-  const rawScore = (processC - (processS * 0.85)) * 100
+  // SYNTHESIS: The precise integration
+  // Alertness A = C - S. We scale this to a 0-100 representation.
+  // Peak theoretical is when C is max (1) and S is min (~0) -> A = 1
+  const alertness = normalizedC - (processS * 0.85); // 0.85 multiplier gives S the proper weight vs C
+  
+  // Scale to 0-100% UI score (Baseline neutral is 50%)
+  const rawScore = (alertness * 100) + 20; // +20 shift to fit realistic score feeling (nobody starts at 0% unless dead)
 
-  return Math.max(0, Math.min(100, Math.round(rawScore)))
+  return Math.max(0, Math.min(100, Math.round(rawScore)));
 }
 
 /**
