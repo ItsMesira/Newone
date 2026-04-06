@@ -40,7 +40,7 @@ export default function DashboardPage() {
       >
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-300">Dashboard</h1>
-          <p className="text-zinc-400 mt-1">Today's energy and routines</p>
+          <p className="text-zinc-400 mt-1">Today&apos;s energy and routines</p>
         </div>
         <Link href="/log">
           <Button className="flex items-center gap-2 rounded-full">
