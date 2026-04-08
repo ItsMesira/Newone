@@ -57,6 +57,7 @@ export default function DashboardPage() {
               <Link href="/dashboard" className="text-white">HOME</Link>
               <Link href="/history" className="hover:text-white transition-colors">HISTORY</Link>
               <Link href="/settings" className="hover:text-white transition-colors">SETTINGS</Link>
+              <Link href="/reference" className="hover:text-white transition-colors border border-zinc-800 px-3 py-1">SIM_ENV</Link>
             </div>
             
             <div className="flex items-center gap-2">
