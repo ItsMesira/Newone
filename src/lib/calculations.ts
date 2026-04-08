@@ -58,24 +58,27 @@ export function calculateEnergyData(
   let t = targetHours - wakeHours
   if (t < 0) t += 24 // hours since waking
 
-  // PROCESS C (Circadian Rhythm): biological anchor min ~4:30 AM assuming 7 AM wake
-  // We model C(t) standardized around 0 and 1.
-  const phase = (t - 4.5) * (Math.PI / 12)
-  const processCRaw = 
-    0.97 * Math.sin(phase + Math.PI/2) + 
-    0.22 * Math.sin(2 * phase + Math.PI/2) +
-    0.11 * Math.sin(3 * phase + Math.PI/2) +
-    0.05 * Math.sin(4 * phase + Math.PI/2) +
-    0.02 * Math.sin(5 * phase + Math.PI/2)
+  // Calculate circular distances for dual-Gaussian peaks (Morning & Evening)
+  const d1 = Math.min(Math.abs(t - 4.5), 24 - Math.abs(t - 4.5))
+  const d2 = Math.min(Math.abs(t - 13), 24 - Math.abs(t - 13))
   
-  // Normalize C to [0, 1] bounds approximately
-  const processC = Math.max(0, Math.min(1, (processCRaw + 1.2) / 2.4))
+  // Clean, infinitely smooth bimodal Process C
+  const processC = 0.9 * Math.exp(-(d1 * d1) / 12) + 0.75 * Math.exp(-(d2 * d2) / 14) + 0.1
 
-  // PROCESS S (Homeostatic Sleep Pressure): Asymptotic accumulation
+  // PROCESS S (Homeostatic Sleep Pressure): Asymptotic accumulation & nocturnal clearance
   const tau_i = 18.2
+  const tau_d = 4.2
   const S_0 = Math.min(0.8, (sleepDebt / 8) * 0.3)
   
-  let processS = 1 - (1 - S_0) * Math.exp(-t / tau_i)
+  let processS = 0
+  if (t <= 16) {
+      // Accumulation during wake period
+      processS = 1 - (1 - S_0) * Math.exp(-t / tau_i)
+  } else {
+      // Dissipation during sleep period
+      const S_max = 1 - (1 - S_0) * Math.exp(-16 / tau_i)
+      processS = S_max * Math.exp(-(t - 16) / tau_d)
+  }
   
   if (napsTotalHours > 0) {
      const napClearance = Math.min(0.5, napsTotalHours * 0.15)
@@ -83,9 +86,11 @@ export function calculateEnergyData(
   }
 
   // Synthesis Alertness A = C - S
-  const alertness = processC - (processS * 0.85)
-  // Scale to 0-100% UI score (Baseline neutral is roughly 50%)
-  const rawScore = (alertness * 100) + 20
+  const alertness = processC - processS
+  
+  // Smooth mapping to [0-100] preventing artificial hard clipping
+  // Alertness ranges roughly from -0.5 to 1.0
+  const rawScore = ((alertness + 0.5) / 1.5) * 100
 
   return {
     score: Math.max(0, Math.min(100, Math.round(rawScore))),
