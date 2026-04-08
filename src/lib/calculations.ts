@@ -93,7 +93,7 @@ export function calculateEnergyData(
   const rawScore = ((alertness + 0.5) / 1.5) * 100
 
   return {
-    score: Math.max(0, Math.min(100, Math.round(rawScore))),
+    score: Math.max(0, Math.min(100, rawScore)),
     processC,
     processS,
     alertness

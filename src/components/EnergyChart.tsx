@@ -67,10 +67,40 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
     }, "");
   };
 
-  const pathD = computeBezierPath(points, p => p.y);
-  
-  // Fill areas
-  const areaD = `${pathD} L 100 100 L 0 100 Z`;
+  const { pathD, areaD } = useMemo(() => {
+    const pD = computeBezierPath(points, p => p.y);
+    const aD = `${pD} L 100 100 L 0 100 Z`;
+    return { pathD: pD, areaD: aD };
+  }, [points]);
+
+  const svgVisuals = useMemo(() => (
+    <>
+      {/* Area Fill */}
+      <motion.path 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        d={areaD} 
+        fill="url(#areaGradient)" 
+        className="pointer-events-none"
+      />
+      
+      {/* Main Stroke */}
+      <motion.path 
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1.5, ease: "easeOut" }}
+        d={pathD} 
+        fill="none" 
+        stroke="url(#scoreGradient)" 
+        strokeWidth={isFullscreen ? "0.6" : "1.2"} 
+        strokeLinecap="round"
+        filter="url(#neonGlow)"
+        vectorEffect="non-scaling-stroke"
+        className="pointer-events-none drop-shadow-xl"
+      />
+    </>
+  ), [pathD, areaD, isFullscreen]);
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return
@@ -154,30 +184,7 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
             </filter>
           </defs>
 
-          {/* Area Fill */}
-          <motion.path 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-            d={areaD} 
-            fill="url(#areaGradient)" 
-            className="pointer-events-none"
-          />
-          
-          {/* Main Stroke */}
-          <motion.path 
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
-            d={pathD} 
-            fill="none" 
-            stroke="url(#scoreGradient)" 
-            strokeWidth={isFullscreen ? "0.6" : "1.2"} 
-            strokeLinecap="round"
-            filter="url(#neonGlow)"
-            vectorEffect="non-scaling-stroke"
-            className="pointer-events-none drop-shadow-xl"
-          />
+          {svgVisuals}
 
           {/* Now Vertical Beam */}
           {points.map((p, i) => {
