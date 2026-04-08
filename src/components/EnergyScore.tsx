@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowUpRight } from "lucide-react"
 
 interface EnergyScoreProps {
   score: number;
@@ -27,7 +26,6 @@ export function EnergyScore({ score, label }: EnergyScoreProps) {
       if (progress < 1) requestAnimationFrame(animate)
     }
     
-    // Only run if it changed significantly
     if (Math.abs(startVal - end) > 0.5) {
       requestAnimationFrame(animate)
     }
@@ -54,12 +52,9 @@ export function EnergyScore({ score, label }: EnergyScoreProps) {
   else if (animatedScore < 70) color = "#fbbf24" // amber-400
 
   return (
-    <div className="flex flex-col h-full justify-between w-full relative bg-[#1c1c1f] rounded-[32px] p-8 border border-white/5 shadow-2xl overflow-hidden min-h-[350px]">
-      <div className="flex justify-between items-start z-10 relative">
+    <div className="flex flex-col h-full w-full bg-[#1c1c1f] rounded-[32px] p-8 pb-6 border border-white/5 shadow-2xl min-h-[350px]">
+      <div className="flex justify-between items-start z-10 w-full relative">
         <h3 className="font-sans text-zinc-400 text-[15px] font-medium tracking-wide">Energy Score</h3>
-        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors">
-          <ArrowUpRight className="w-4 h-4 text-zinc-400" />
-        </div>
       </div>
       
       <div className="flex items-baseline mt-4 z-10 relative">
@@ -69,8 +64,9 @@ export function EnergyScore({ score, label }: EnergyScoreProps) {
         <span className="text-xl text-zinc-500 font-medium ml-2">/ 100</span>
       </div>
       
-      <div className="absolute inset-x-0 bottom-0 flex justify-center pointer-events-none">
-        <svg viewBox="0 0 200 130" className="w-[110%] max-w-[450px] transform translate-y-[20px]">
+      {/* SVG Container - strictly positioned to not clip using natural flex flow */}
+      <div className="flex-1 flex flex-col justify-end items-center mt-8 w-full min-h-[160px] relative pointer-events-none">
+        <svg viewBox="0 0 200 130" className="w-[120%] max-w-[380px] overflow-visible mx-auto transform translate-y-[10px]">
           <defs>
             <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
               <line x1="0" y1="0" x2="0" y2="6" stroke="#2a2a2f" strokeWidth="1.5" />
@@ -120,7 +116,7 @@ export function EnergyScore({ score, label }: EnergyScoreProps) {
         </svg>
       </div>
 
-      <div className="z-10 relative mt-auto text-center font-sans text-xs font-medium text-zinc-400 pt-32 pb-1 bg-gradient-to-t from-[#1c1c1f] via-[#1c1c1f]/80 to-transparent">
+      <div className="z-10 relative mt-2 text-center font-sans text-xs font-medium text-zinc-400">
         {label}
       </div>
     </div>

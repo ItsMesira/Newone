@@ -190,16 +190,33 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
                        strokeDasharray="1 1"
                        opacity={hoverPct ? 0.3 : 1}
                     />
-                    <circle cx={p.x} cy={p.y} r="1.5" fill="white" filter="url(#neonGlow)" opacity={hoverPct ? 0.3 : 1} />
-                    {!hoverPct && (
-                       <text x={p.x + 1} y="15" className="text-[3px] font-mono fill-white tracking-widest bg-black/50">NOW</text>
-                    )}
+                    <circle cx={p.x} cy={p.y} r="1.5" fill="white" opacity={hoverPct ? 0.3 : 1} />
                   </g>
                )
             }
             return null
           })}
         </svg>
+
+        {/* Crisp HTML Overlay for 'NOW' Indicator matching SVG spatial bounds */}
+        <div className="absolute inset-0 ml-10 pointer-events-none" style={{ width: 'calc(100% - 40px)' }}>
+            {points.map((p, i) => {
+               if (p.isNow && hoverPct === null) {
+                  return (
+                    <div 
+                      key="now-label"
+                      className="absolute top-4 -translate-x-1/2 flex flex-col items-center gap-1"
+                      style={{ left: `${p.x}%` }}
+                    >
+                       <span className="bg-[#121214] border border-zinc-700 text-zinc-300 font-mono text-[9px] px-2 py-[2px] rounded uppercase shadow-xl tracking-widest whitespace-nowrap">
+                         Now
+                       </span>
+                    </div>
+                  )
+               }
+               return null
+            })}
+        </div>
 
         {/* Hover Tooltip */}
         <AnimatePresence>
