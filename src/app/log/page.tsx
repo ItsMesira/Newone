@@ -13,6 +13,8 @@ import { calculateActualSleep } from "@/lib/calculations"
 import { subDays, format } from "date-fns"
 import { CheckCircle2 } from "lucide-react"
 
+import { PageLayout } from "@/components/PageLayout"
+
 export default function LogPage() {
   const router = useRouter()
   const { mutate } = useSleepLogs()
@@ -96,89 +98,95 @@ export default function LogPage() {
   if (settingsLoading) return null
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-12">
-      <AnimatePresence mode="wait">
-        {!success ? (
-          <motion.div
-            key="form"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 28 }}
-          >
-            <Card className="p-8">
-              <CardHeader className="px-0 pt-0 text-center">
-                <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-300">Log Last Night</CardTitle>
-                <CardDescription>Enter your sleep details to track your debt.</CardDescription>
-              </CardHeader>
+    <PageLayout>
+      <div className="max-w-xl mx-auto px-4 py-8">
+        <AnimatePresence mode="wait">
+          {!success ? (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <div className="border border-zinc-800 bg-zinc-900/10 p-8 sm:p-12">
+                <header className="mb-10 text-center border-b border-zinc-900 pb-10">
+                   <h1 className="text-3xl font-mono uppercase tracking-[0.2em] font-light text-white mb-3">Initialize_Log</h1>
+                   <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest leading-relaxed">
+                     [Biometric Archive] / Syncing local sleep sequence to cloud
+                   </p>
+                </header>
 
               <form onSubmit={handleSubmit} className="space-y-6 mt-6">
                 <div>
-                  <label className="text-sm font-medium text-zinc-300 mb-2 block">Night of</label>
+                  <label className="text-sm font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Night of</label>
                   <Input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
+                    className="rounded-none bg-black border-zinc-800 text-white font-mono"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-zinc-300 mb-2 block">Bedtime</label>
+                    <label className="text-sm font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Bedtime</label>
                     <Input
                       type="time"
                       value={bedtime}
                       onChange={(e) => setBedtime(e.target.value)}
                       required
+                      className="rounded-none bg-black border-zinc-800 text-white font-mono"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-zinc-300 mb-2 block">Wake Time</label>
+                    <label className="text-sm font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Wake Time</label>
                     <Input
                       type="time"
                       value={wakeTime}
                       onChange={(e) => setWakeTime(e.target.value)}
                       required
+                      className="rounded-none bg-black border-zinc-800 text-white font-mono"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-zinc-300 mb-2 block">Optional Notes (e.g., caffeine late, noise)</label>
+                  <label className="text-sm font-mono text-zinc-500 uppercase tracking-widest mb-2 block">System Notes</label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="flex min-h-[100px] w-full rounded-2xl border border-[rgba(255,255,255,0.1)] bg-zinc-900/50 px-4 py-2 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary resize-none placeholder:text-zinc-500"
-                    placeholder="How did you sleep?"
+                    className="flex min-h-[100px] w-full rounded-none border border-zinc-800 bg-black px-4 py-2 text-sm text-white font-mono transition-colors focus-visible:outline-none focus-visible:border-white resize-none placeholder:text-zinc-700"
+                    placeholder="ENTER_OBSERVATIONS..."
                   />
                 </div>
 
-                <Button type="submit" className="w-full py-6 text-lg" disabled={loading}>
-                  {loading ? "Saving..." : "Save Sleep Log"}
+                <Button type="submit" className="w-full py-6 rounded-none bg-white text-black hover:bg-zinc-200 font-mono uppercase tracking-[0.2em] text-xs" disabled={loading}>
+                  {loading ? "PROCESSING..." : "COMMIT_LOG"}
                 </Button>
               </form>
-            </Card>
+            </div>
           </motion.div>
         ) : (
           <motion.div
             key="success"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center min-h-[400px] bg-glass rounded-3xl p-8 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center min-h-[400px] border border-zinc-800 bg-zinc-900/10 p-12 text-center"
           >
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 10, delay: 0.1 }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
             >
-              <CheckCircle2 className="w-24 h-24 text-success mb-6" />
+              <CheckCircle2 className="w-20 h-20 text-primary mb-8" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-white mb-2">Sleep Log Saved!</h2>
-            <p className="text-zinc-400">Taking you back to the dashboard...</p>
+            <h2 className="text-2xl font-mono uppercase tracking-[0.2em] text-white mb-3">Sync_Completed</h2>
+            <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest">Biometric entry archived successfully. Redirecting...</p>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
+  </PageLayout>
   )
 }

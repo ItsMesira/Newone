@@ -15,49 +15,34 @@ const navItems = [
 export function Navbar() {
   const pathname = usePathname()
 
-  // Don't show navbar in auth, onboarding, reference, or dashboard (has own nav)
-  if (pathname.startsWith('/auth') || pathname.startsWith('/onboarding') || pathname === '/' || pathname.startsWith('/dashboard') || pathname.startsWith('/reference')) {
-    return null
-  }
-
   return (
-    <motion.nav 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-40 glass border-t-0 border-x-0 border-b border-white/10 px-4 py-3"
-    >
-      <div className="max-w-screen-xl mx-auto flex items-center justify-between">
-        <Link href="/dashboard" className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-300">
-          SyncSleep
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-zinc-800 px-6 sm:px-10 py-5">
+      <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
+        <Link href="/dashboard" className="text-2xl font-mono uppercase tracking-[0.2em] font-light text-primary flex items-center gap-3">
+          <div className="w-2 h-2 bg-primary"></div>
+          SYNC.SLEEP
         </Link>
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-6">
           {navItems.map((item) => {
             const isActive = pathname === item.href
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="relative px-3 py-2 rounded-xl text-sm font-medium transition-colors"
+                className={`flex items-center gap-2 group px-2 py-1 transition-colors ${isActive ? 'text-white' : 'text-zinc-500 hover:text-white'}`}
               >
-                <div className="flex items-center gap-2">
-                  <item.icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
-                  <span className={`hidden sm:inline-block ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
-                    {item.label}
-                  </span>
-                </div>
+                <item.icon className="h-3 w-3" />
+                <span className="hidden sm:inline-block font-mono text-[10px] uppercase tracking-[0.2em]">
+                  {item.label}
+                </span>
                 {isActive && (
-                  <motion.div
-                    layoutId="navbar-indicator"
-                    className="absolute inset-0 bg-white/10 rounded-xl -z-10"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
+                   <div className="w-1 h-1 bg-white ml-1"></div>
                 )}
               </Link>
             )
           })}
         </div>
       </div>
-    </motion.nav>
+    </nav>
   )
 }

@@ -14,109 +14,92 @@ export function EnergyScore({ score, label }: EnergyScoreProps) {
   useEffect(() => {
     let startVal = animatedScore
     const end = Math.max(0, Math.min(100, score))
-    const duration = 1200
+    const duration = 800
     const startTime = performance.now()
 
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime
       const progress = Math.min(elapsed / duration, 1)
-      const easeOut = 1 - Math.pow(1 - progress, 3) // cubic ease out
+      const easeOut = 1 - Math.pow(1 - progress, 3)
       setAnimatedScore(startVal + (end - startVal) * easeOut)
 
       if (progress < 1) requestAnimationFrame(animate)
     }
     
-    if (Math.abs(startVal - end) > 0.5) {
-      requestAnimationFrame(animate)
-    }
+    requestAnimationFrame(animate)
   }, [score])
 
   const displayScore = Math.round(animatedScore)
 
-  // SVG Gauge Math
+  // SVG Gauge Math - Centered and scaled for no clipping
   const cx = 100
   const cy = 100
-  const r = 70
-  const strokeWidth = 24
+  const r = 75
+  const strokeWidth = 14
+  
+  // Semicircle arc length
   const pathLength = Math.PI * r
-
   const progressRatio = animatedScore / 100
   const dashOffset = pathLength * (1 - progressRatio)
 
+  // Calculate knob position - 180 deg reversal for arc
   const angle = Math.PI - progressRatio * Math.PI
   const knobX = cx + r * Math.cos(angle)
   const knobY = cy - r * Math.sin(angle)
 
-  let color = "#4ade80" // green-400
-  if (animatedScore < 40) color = "#fb7185" // rose-400
-  else if (animatedScore < 70) color = "#fbbf24" // amber-400
-
   return (
-    <div className="flex flex-col h-full w-full bg-[#1c1c1f] rounded-[32px] p-8 pb-6 border border-white/5 shadow-2xl min-h-[350px]">
-      <div className="flex justify-between items-start z-10 w-full relative">
-        <h3 className="font-sans text-zinc-400 text-[15px] font-medium tracking-wide">Energy Score</h3>
+    <div className="flex flex-col h-full w-full bg-black border border-zinc-800 p-8 min-h-[350px]">
+      <div className="flex justify-between items-start">
+        <h3 className="font-mono text-zinc-500 text-[10px] uppercase tracking-[0.2em]">STAT.ENERGY_SCORE</h3>
       </div>
       
-      <div className="flex items-baseline mt-4 z-10 relative">
-        <span className="text-[72px] pb-2 font-medium text-white tracking-tight leading-[0.85]">
+      <div className="flex items-baseline mt-4 border-b border-zinc-900 pb-8">
+        <span className="text-[84px] font-mono font-light text-white tracking-tighter leading-none">
           {displayScore}
         </span>
-        <span className="text-xl text-zinc-500 font-medium ml-2">/ 100</span>
+        <span className="text-xl text-zinc-700 font-mono ml-3 uppercase tracking-widest">/ 100</span>
       </div>
       
-      {/* SVG Container - strictly positioned to not clip using natural flex flow */}
-      <div className="flex-1 flex flex-col justify-end items-center mt-8 w-full min-h-[160px] relative pointer-events-none">
-        <svg viewBox="0 0 200 130" className="w-[120%] max-w-[380px] overflow-visible mx-auto transform translate-y-[10px]">
-          <defs>
-            <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-              <line x1="0" y1="0" x2="0" y2="6" stroke="#2a2a2f" strokeWidth="1.5" />
-            </pattern>
-            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.8" />
-            </filter>
-          </defs>
-
-          {/* Base track solid dark background */}
+      <div className="flex-1 flex flex-col justify-center items-center mt-12 w-full relative pointer-events-none">
+        <svg 
+          viewBox="0 0 200 120" 
+          className="w-full max-w-[320px] overflow-visible"
+        >
+          {/* Base track */}
           <path 
-            d="M 30 100 A 70 70 0 0 1 170 100" 
+            d="M 25 100 A 75 75 0 0 1 175 100" 
             fill="none" 
-            stroke="#121214" 
+            stroke="#18181b" 
             strokeWidth={strokeWidth} 
-            strokeLinecap="round" 
-          />
-          {/* Base track pattern (diagonal slashes) */}
-          <path 
-            d="M 30 100 A 70 70 0 0 1 170 100" 
-            fill="none" 
-            stroke="url(#hatch)" 
-            strokeWidth={strokeWidth} 
-            strokeLinecap="round" 
+            strokeLinecap="butt" 
           />
 
-          {/* Active colored track mapped to energy score */}
+          {/* Active track */}
           <path 
-            d="M 30 100 A 70 70 0 0 1 170 100" 
+            d="M 25 100 A 75 75 0 0 1 175 100" 
             fill="none" 
-            stroke={color} 
+            stroke="white" 
             strokeWidth={strokeWidth} 
-            strokeLinecap="round"
+            strokeLinecap="butt"
             strokeDasharray={pathLength}
             strokeDashoffset={dashOffset}
-            style={{ transition: 'stroke 0.8s ease-in-out' }}
           />
 
-          {/* Left dark starting hole to match the UI image detail */}
-          <circle cx="30" cy="100" r="5" fill="#121214" />
-
-          {/* Moving white knob/thumb */}
-          <g transform={`translate(${knobX}, ${knobY})`}>
-             <circle cx="0" cy="0" r="10" fill="white" filter="url(#shadow)" />
-             <circle cx="0" cy="0" r="4" fill={color} style={{ transition: 'fill 0.8s ease-in-out' }} />
-          </g>
+          {/* High-visibility cursor line instead of rounded knob */}
+          <line 
+            x1={cx + (r - 12) * Math.cos(angle)} 
+            y1={cy - (r - 12) * Math.sin(angle)}
+            x2={cx + (r + 12) * Math.cos(angle)} 
+            y2={cy - (r + 12) * Math.sin(angle)}
+            stroke="white"
+            strokeWidth="2"
+          />
+          
+          <circle cx={knobX} cy={knobY} r="3" fill="black" stroke="white" strokeWidth="1" />
         </svg>
       </div>
 
-      <div className="z-10 relative mt-2 text-center font-sans text-xs font-medium text-zinc-400">
+      <div className="mt-8 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-white">
         {label}
       </div>
     </div>

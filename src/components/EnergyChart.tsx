@@ -11,6 +11,20 @@ interface EnergyChartProps {
   sleepDebt: number;
 }
 
+// Create smooth Bezier strings for the main data lines
+// A simple cubic interpolation utility for visually pleasing curves
+const computeBezierPath = (dataPoints: any[], valueMapper: (p: any) => number) => {
+  return dataPoints.reduce((path, p, i, a) => {
+    if (i === 0) return `M ${p.x} ${valueMapper(p)}`;
+    const prev = a[i - 1];
+    const cx1 = prev.x + (p.x - prev.x) / 2;
+    const cy1 = valueMapper(prev);
+    const cx2 = p.x - (p.x - prev.x) / 2;
+    const cy2 = valueMapper(p);
+    return `${path} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p.x} ${valueMapper(p)}`;
+  }, "");
+};
+
 export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
   const [mounted, setMounted] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -40,7 +54,7 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
       
       pts.push({
         x: (i / 96) * 100,
-        y: 100 - data.score, // Convert [0, 100] mapping to [100, 0] SVG Y-axis
+        y: 100 - data.score, 
         score: data.score,
         processC: data.processC,
         processS: data.processS,
@@ -51,22 +65,6 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
     return { points: pts };
   }, [wakeTime, sleepDebt])
 
-  if (!mounted) return <div className="min-h-[400px] w-full bg-black border border-zinc-900"></div>
-
-  // Create smooth Bezier strings for the main data lines
-  // A simple cubic interpolation utility for visually pleasing curves
-  const computeBezierPath = (dataPoints: typeof points, valueMapper: (p: typeof points[0]) => number) => {
-    return dataPoints.reduce((path, p, i, a) => {
-      if (i === 0) return `M ${p.x} ${valueMapper(p)}`;
-      const prev = a[i - 1];
-      const cx1 = prev.x + (p.x - prev.x) / 2;
-      const cy1 = valueMapper(prev);
-      const cx2 = p.x - (p.x - prev.x) / 2;
-      const cy2 = valueMapper(p);
-      return `${path} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p.x} ${valueMapper(p)}`;
-    }, "");
-  };
-
   const { pathD, areaD } = useMemo(() => {
     const pD = computeBezierPath(points, p => p.y);
     const aD = `${pD} L 100 100 L 0 100 Z`;
@@ -75,32 +73,24 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
 
   const svgVisuals = useMemo(() => (
     <>
-      {/* Area Fill */}
-      <motion.path 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
+      <path 
         d={areaD} 
-        fill="url(#areaGradient)" 
-        className="pointer-events-none"
+        fill="url(#areaFill)" 
+        className="pointer-events-none opacity-40"
       />
-      
-      {/* Main Stroke */}
-      <motion.path 
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1.5, ease: "easeOut" }}
+      <path 
         d={pathD} 
         fill="none" 
-        stroke="url(#scoreGradient)" 
-        strokeWidth={isFullscreen ? "0.6" : "1.2"} 
+        stroke="white" 
+        strokeWidth="0.8" 
         strokeLinecap="round"
-        filter="url(#neonGlow)"
         vectorEffect="non-scaling-stroke"
-        className="pointer-events-none drop-shadow-xl"
+        className="pointer-events-none opacity-90"
       />
     </>
-  ), [pathD, areaD, isFullscreen]);
+  ), [pathD, areaD]);
+
+  if (!mounted) return <div className="min-h-[400px] w-full bg-black border border-zinc-900"></div>
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return
@@ -137,7 +127,7 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
            <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mt-1">Dual-Process Analysis [C/S]</span>
         </div>
         <div className="flex gap-4 font-mono text-[10px] text-zinc-500 tracking-widest">
-           <span className="flex items-center gap-2"><span className="w-2 h-2 bg-indigo-500 block rounded-full"></span> ALERTNESS</span>
+           <span className="flex items-center gap-2"><span className="w-2 h-2 bg-white block rounded-sm"></span> ALERTNESS</span>
         </div>
       </div>
       
@@ -163,25 +153,10 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
           onMouseLeave={() => setHoverPct(null)}
         >
           <defs>
-            <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#818cf8"/>
-              <stop offset="50%" stopColor="#c084fc"/>
-              <stop offset="100%" stopColor="#e879f9"/>
-            </linearGradient>
-
-            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(99, 102, 241, 0.4)"/>
-              <stop offset="50%" stopColor="rgba(192, 132, 252, 0.1)"/>
+            <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.1)"/>
               <stop offset="100%" stopColor="rgba(0, 0, 0, 0)"/>
             </linearGradient>
-            
-            <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
           </defs>
 
           {svgVisuals}
@@ -193,11 +168,11 @@ export function EnergyChart({ wakeTime, sleepDebt }: EnergyChartProps) {
                   <g key="now" className="pointer-events-none transition-opacity">
                     <line 
                        x1={p.x} y1="0" x2={p.x} y2="100" 
-                       stroke="white" strokeWidth="0.2" 
+                       stroke="white" strokeWidth="0.1" 
                        strokeDasharray="1 1"
-                       opacity={hoverPct ? 0.3 : 1}
+                       opacity={hoverPct ? 0.3 : 0.6}
                     />
-                    <circle cx={p.x} cy={p.y} r="1.5" fill="white" opacity={hoverPct ? 0.3 : 1} />
+                    <circle cx={p.x} cy={p.y} r="0.8" fill="white" opacity={hoverPct ? 0.3 : 1} />
                   </g>
                )
             }

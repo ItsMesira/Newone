@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Oswald } from 'next/font/google'
 import './globals.css'
-import { Navbar } from '@/components/Navbar'
 import { Toaster } from 'sonner'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
@@ -19,12 +18,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${oswald.variable} font-sans`}>
-        <Navbar />
-        {/* Adds top padding for navbar except on auth/onboarding which hide the navbar */}
-        <main className="min-h-screen pt-4 pb-4">
-          {children}
-        </main>
+      <body className={`${inter.variable} ${oswald.variable} font-sans bg-background text-foreground`}>
+        {children}
         <Toaster theme="dark" position="top-center" />
       </body>
     </html>
