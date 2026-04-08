@@ -12,10 +12,10 @@ interface InteractiveEnergyChartProps {
 }
 
 export function InteractiveEnergyChart({ wakeTime, sleepDebt, napsTotalHours }: InteractiveEnergyChartProps) {
-  // Generate 24 hours of data points at 15 minute intervals, starting from exactly 1 hour before wakeTime
+  // Generate exactly 24 hours of data points (00:00 to 00:00)
   const data = useMemo(() => {
     const pts = []
-    const startTime = addHours(wakeTime, -1)
+    const startTime = startOfDay(wakeTime)
     
     for (let i = 0; i <= 24 * 4; i++) { // 96 data points
       const time = addMinutes(startTime, i * 15)
@@ -49,12 +49,12 @@ export function InteractiveEnergyChart({ wakeTime, sleepDebt, napsTotalHours }: 
   // Area under alertness
   const alertnessArea = `${alertnessPath} L ${mapX(data.length - 1)} ${mapY(0)} L ${mapX(0)} ${mapY(0)} Z`
 
-  // Calculate zone pixel boundaries based on time relative to start Time
-  const startTimeMs = addHours(wakeTime, -1).getTime()
+  // Calculate zone pixel boundaries based on absolute time of day
+  const dayStartMs = startOfDay(wakeTime).getTime()
   const totalMs = 24 * 60 * 60 * 1000
 
   const getZoneRect = (start: Date, end: Date) => {
-    const rx = padX + Math.max(0, (start.getTime() - startTimeMs) / totalMs) * innerW
+    const rx = padX + ((start.getTime() - dayStartMs) / totalMs) * innerW
     const rw = ((end.getTime() - start.getTime()) / totalMs) * innerW
     return { x: rx, w: rw }
   }
@@ -62,6 +62,9 @@ export function InteractiveEnergyChart({ wakeTime, sleepDebt, napsTotalHours }: 
   const mph = getZoneRect(zones.morningPeak.start, zones.morningPeak.end)
   const adh = getZoneRect(zones.afternoonDip.start, zones.afternoonDip.end)
   const mh = getZoneRect(zones.melatoninWindow.start, zones.melatoninWindow.end)
+
+  // Dynamic WAKE line position based on absolute wakeTime
+  const wakeLineX = padX + ((wakeTime.getTime() - dayStartMs) / totalMs) * innerW
 
   return (
     <div className="w-full relative overflow-x-auto border border-zinc-800 bg-black text-white font-mono uppercase">
@@ -98,16 +101,17 @@ export function InteractiveEnergyChart({ wakeTime, sleepDebt, napsTotalHours }: 
             </g>
           ))}
 
-          {/* Sub Grid Lines X (Time labels) */}
-          {[0, 4, 8, 12, 16, 20, 24].map(idxH => {
-            const px = mapX(idxH * 4) // 4 data points per hour
-            const d = data[idxH * 4]
-            return d ? (
-              <g key={idxH}>
+          {/* Sub Grid Lines X (Fixed hour labels) */}
+          {[0, 4, 8, 12, 16, 20, 24].map(h => {
+            const px = padX + (h / 24) * innerW
+            return (
+              <g key={h}>
                 <line x1={px} y1={padY} x2={px} y2={padY + innerH} stroke="rgba(255,255,255,0.05)" />
-                <text x={px} y={padY + innerH + 20} className="text-[10px] fill-zinc-500" textAnchor="middle">{format(d.time, 'HH:mm')}</text>
+                <text x={px} y={padY + innerH + 20} className="text-[10px] fill-zinc-500" textAnchor="middle">
+                  {h.toString().padStart(2, '0')}:00
+                </text>
               </g>
-            ) : null
+            )
           })}
 
           {/* Area */}
@@ -154,9 +158,9 @@ export function InteractiveEnergyChart({ wakeTime, sleepDebt, napsTotalHours }: 
             animate={{ pathLength: 1 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
           />
-          {/* Wake line indicator */}
-          <line x1={mapX(4)} y1={padY} x2={mapX(4)} y2={padY + innerH} stroke="white" strokeWidth="2" />
-          <text x={mapX(4) - 5} y={padY - 10} className="text-[10px] fill-white tracking-widest" textAnchor="end">WAKE</text>
+          {/* Wake line indicator - dynamically positioned */}
+          <line x1={wakeLineX} y1={padY} x2={wakeLineX} y2={padY + innerH} stroke="white" strokeWidth="2" />
+          <text x={wakeLineX - 5} y={padY - 10} className="text-[10px] fill-white tracking-widest uppercase" textAnchor="end">WAKE</text>
         </svg>
       </div>
     </div>
